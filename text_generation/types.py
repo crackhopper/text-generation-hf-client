@@ -39,8 +39,6 @@ class Parameters(BaseModel):
     details: bool = False
     # Get decoder input token logprobs and ids
     decoder_input_details: bool = False
-    # Return the N most likely tokens at each step
-    top_n_tokens: Optional[int]
 
     @validator("best_of")
     def valid_best_of(cls, field_value, values):
@@ -103,12 +101,6 @@ class Parameters(BaseModel):
             raise ValidationError("`typical_p` must be > 0.0 and < 1.0")
         return v
 
-    @validator("top_n_tokens")
-    def valid_top_n_tokens(cls, v):
-        if v is not None and v <= 0:
-            raise ValidationError("`top_n_tokens` must be strictly positive")
-        return v
-
 
 class Request(BaseModel):
     # Prompt
@@ -133,7 +125,9 @@ class Request(BaseModel):
             and parameters.best_of > 1
             and field_value
         ):
-            raise ValidationError("`best_of` != 1 is not supported when `stream` == True")
+            raise ValidationError(
+                "`best_of` != 1 is not supported when `stream` == True"
+            )
         return field_value
 
 
@@ -185,8 +179,6 @@ class BestOfSequence(BaseModel):
     prefill: List[InputToken]
     # Generated tokens
     tokens: List[Token]
-    # Most likely tokens
-    top_tokens: Optional[List[List[Token]]]
 
 
 # `generate` details
@@ -201,8 +193,6 @@ class Details(BaseModel):
     prefill: List[InputToken]
     # Generated tokens
     tokens: List[Token]
-    # Most likely tokens
-    top_tokens: Optional[List[List[Token]]]
     # Additional sequences when using the `best_of` parameter
     best_of_sequences: Optional[List[BestOfSequence]]
 
@@ -229,8 +219,6 @@ class StreamDetails(BaseModel):
 class StreamResponse(BaseModel):
     # Generated token
     token: Token
-    # Most likely tokens
-    top_tokens: Optional[List[Token]]
     # Complete generated text
     # Only available when the generation is finished
     generated_text: Optional[str]
